@@ -1,5 +1,5 @@
 RE_CLIPID   = Regex('clip.id = ([0-9]+)')
-RE_SUMMARY  = Regex('clip.description = \("(.+)"\);')
+RE_SUMMARY  = Regex('clip.description = "(.+)";')
 
 PREFIX          = '/video/ctvnews'
 NAME            = 'CTV News'
