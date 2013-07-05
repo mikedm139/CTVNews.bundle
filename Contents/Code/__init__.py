@@ -1,6 +1,8 @@
 RE_CLIPID   = Regex('clip.id = ([0-9]+)')
 RE_SUMMARY  = Regex('clip.description = escape\("(.+)"\);')
 
+PREFIX          = '/video/ctvnews'
+NAME            = 'CTV News'
 CTV_URL         = 'http://www.ctvnews.ca/video'
 VIDEO_URL       = 'http://www.ctvnews.ca/video?clipId=%s&binId=%s'
 PLAYLIST_URL    = "http://www.ctvnews.ca/%s?ot=example.AjaxPageLayout.ot&pageNum=1&maxItemsPerPage=12"
@@ -10,14 +12,13 @@ ICON    = 'icon-default.png'
 
 ####################################################################################################
 def Start():
-    Plugin.AddPrefixHandler('/video/ctvnews', MainMenu, 'CTV News', ICON, ART)
-
     ObjectContainer.art = R(ART)
     ObjectContainer.title1 = 'CTV News'
 
     DirectoryObject.thumb = R(ICON)
 
 ####################################################################################################
+@handler(PREFIX, NAME)
 def MainMenu():
     oc = ObjectContainer()
     data = HTML.ElementFromURL(CTV_URL)
@@ -28,6 +29,7 @@ def MainMenu():
     return oc
 
 ####################################################################################################
+@route(PREFIX + '/section/{section_title}/{section_id}')
 def SectionMenu(section_title, section_id):
     oc = ObjectContainer(title2=section_title)
     data = HTML.ElementFromURL(PLAYLIST_URL % section_id)
