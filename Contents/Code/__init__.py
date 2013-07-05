@@ -39,6 +39,7 @@ def SectionMenu(section_title, section_id, page_num=1):
         details = article.xpath('following-sibling::script')[1].text
         clipId = RE_CLIPID.search(details).group(1)
         summary = RE_SUMMARY.search(details).group(1)
-        oc.add(VideoClipObject(url=VIDEO_URL % (clipId, section_id), title=title, summary=summary, thumb=thumb))
+        oc.add(VideoClipObject(url=VIDEO_URL % (clipId, section_id), title=title, summary=summary,
+            thumb=Resource.ContentsOfURLWithFallback(url=thumb)))
     oc.add(NextPageObject(key=Callback(SectionMenu, section_title, section_id, page_num=page_num+1)))
     return oc
