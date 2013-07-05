@@ -18,7 +18,7 @@ def Start():
     DirectoryObject.thumb = R(ICON)
 
 ####################################################################################################
-@handler(PREFIX, NAME)
+@handler(PREFIX, NAME, ICON, ART)
 def MainMenu():
     oc = ObjectContainer()
     data = HTML.ElementFromURL(CTV_URL)
@@ -29,17 +29,17 @@ def MainMenu():
     return oc
 
 ####################################################################################################
-@route(PREFIX + '/section/{section_title}/{section_id}/{page_num}', page_num=int)
+@route(PREFIX + '/section', page_num=int)
 def SectionMenu(section_title, section_id, page_num=1):
     oc = ObjectContainer(title2=section_title)
-    data = HTML.ElementFromURL(PLAYLIST_URL % section_id, page_num)
+    data = HTML.ElementFromURL(PLAYLIST_URL % (section_id, page_num))
     for article in data.xpath('//article'):
         title = article.xpath('.//p[@class="videoPlaylistDescription"]')[0].text
         thumb = article.xpath('.//img')[0].get('src').replace('box_180', 'landscape_960')
         details = article.xpath('following-sibling::script')[1].text
         clipId = RE_CLIPID.search(details).group(1)
-        summary = RE_SUMMARY.search(details).group(1)
+        summary = RE_SUMMARY.search(details).group(1).replace("\\'", "'")
         oc.add(VideoClipObject(url=VIDEO_URL % (clipId, section_id), title=title, summary=summary,
             thumb=Resource.ContentsOfURLWithFallback(url=thumb)))
-    oc.add(NextPageObject(key=Callback(SectionMenu, section_title, section_id, page_num=page_num+1)))
+    oc.add(NextPageObject(key=Callback(SectionMenu, section_title=section_title, section_id=section_id, page_num=page_num+1)))
     return oc
