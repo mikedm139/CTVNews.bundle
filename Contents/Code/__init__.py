@@ -6,6 +6,7 @@ NAME            = 'CTV News'
 CTV_URL         = 'http://www.ctvnews.ca'
 VIDEO_URL       = 'http://www.ctvnews.ca/video?clipId=%s&binId=%s'
 PLAYLIST_URL    = "%s/%s?ot=example.AjaxPageLayout.ot&pageNum=%d&maxItemsPerPage=12"
+EPISODE_URL     = "http://www.ctvnews.ca/video?playlistId=%s&binId=%s" #playlistId, binId
 
 ####################################################################################################
 def Start():
@@ -36,15 +37,30 @@ def SectionMenu(section_title, section_id, url=CTV_URL, page_num=1):
         except: title = article.xpath('.//h3[@class="videoPackageTitle"]/a')[0].text
         thumb = article.xpath('.//img')[0].get('src').replace('box_180', 'landscape_960').replace('landscape_150', 'landscape_960')
         try:
-            clipId = article.get('id')
-            summary = article.xpath('.//p[contains(@class, "videoPackageDescription")]')[0].text
+            clipId = article.xpath('./a')[0].get('id')
+            try:
+                summary = ''
+                for clip in data.xpath('//script'):
+                    if "playlistMap['%s'].push(clip)" % clipId in clip.text:
+                        description = RE_SUMMARY.search(clip.text).group(1).replace("\\'", "'")
+                        summary = summary + description + '\n'
+                    else:
+                        pass
+            except:
+                summary = article.xpath('.//p[contains(@class, "videoPlaylistDescription")]')[0].text
+            oc.add(VideoClipObject(url=EPISODE_URL % (clipId, section_id), title=title, summary=summary,
+                thumb=Resource.ContentsOfURLWithFallback(url=thumb)))
         except:
-            details = article.xpath('following-sibling::script')[1].text
-            clipId = RE_CLIPID.search(details).group(1)
-            summary = RE_SUMMARY.search(details).group(1).replace("\\'", "'")
-        oc.add(VideoClipObject(url=VIDEO_URL % (clipId, section_id), title=title, summary=summary,
-            thumb=Resource.ContentsOfURLWithFallback(url=thumb)))
-
+            try:
+                clipId = article.get('id')
+                summary = article.xpath('.//p[contains(@class, "videoPackageDescription")]')[0].text
+            except:    
+                details = article.xpath('following-sibling::script')[1].text
+                clipId = RE_CLIPID.search(details).group(1)
+                summary = RE_SUMMARY.search(details).group(1).replace("\\'", "'")
+        
+            oc.add(VideoClipObject(url=VIDEO_URL % (clipId, section_id), title=title, summary=summary,
+                thumb=Resource.ContentsOfURLWithFallback(url=thumb)))
     oc.add(NextPageObject(key=Callback(SectionMenu, section_title=section_title, section_id=section_id, page_num=page_num+1)))
 
     return oc
